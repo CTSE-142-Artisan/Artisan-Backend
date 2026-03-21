@@ -1,6 +1,5 @@
 package com.artisan.order.dto;
 
-import com.artisan.order.model.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
