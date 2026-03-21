@@ -48,5 +48,12 @@ public class UserController {
         return ResponseEntity.ok(new ValidationResponse(id, valid));
     }
 
+    @GetMapping("/{id}/validate-seller")
+    @Operation(summary = "Validate user is a seller (internal - for Listing service integration)")
+    public ResponseEntity<ValidationResponse> validateSeller(@PathVariable String id) {
+        boolean valid = userService.validateSeller(id);
+        return ResponseEntity.ok(new ValidationResponse(id, valid));
+    }
+
     public record ValidationResponse(String userId, boolean valid) {}
 }
