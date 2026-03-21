@@ -1,7 +1,9 @@
 package com.artisan.review.service;
 
+import com.artisan.review.client.OrderServiceClient;
 import com.artisan.review.client.UserServiceClient;
 import com.artisan.review.dto.CreateReviewRequest;
+import com.artisan.review.dto.ListingReviewSummaryResponse;
 import com.artisan.review.dto.ReviewResponse;
 import com.artisan.review.model.Review;
 import com.artisan.review.repository.ReviewRepository;
@@ -23,6 +25,7 @@ public class ReviewService {
 
     private final ReviewRepository repository;
     private final UserServiceClient userServiceClient;
+    private final OrderServiceClient orderServiceClient;
 
     public ReviewResponse create(CreateReviewRequest request) {
         var existing = repository.findByOrderIdAndUserIdAndListingId(
@@ -32,6 +35,10 @@ public class ReviewService {
         );
         if (existing.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Review already exists for this listing in the selected order");
+        }
+
+        if (!orderServiceClient.hasPurchased(request.getUserId(), request.getListingId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Reviews are only allowed for purchased listings");
         }
 
         Review review = Review.builder()
@@ -72,6 +79,28 @@ public class ReviewService {
                     return toResponse(r, profile.displayName(), profile.avatarUrl());
                 })
                 .collect(Collectors.toList());
+    }
+
+    public ListingReviewSummaryResponse getListingSummary(String listingId) {
+        List<Review> reviews = repository.findByListingIdAndVisibleTrue(listingId);
+        if (reviews.isEmpty()) {
+            return ListingReviewSummaryResponse.builder()
+                    .listingId(listingId)
+                    .averageRating(null)
+                    .reviewCount(0)
+                    .build();
+        }
+
+        double averageRating = reviews.stream()
+                .mapToInt(Review::getRating)
+                .average()
+                .orElse(0.0);
+
+        return ListingReviewSummaryResponse.builder()
+                .listingId(listingId)
+                .averageRating(averageRating)
+                .reviewCount(reviews.size())
+                .build();
     }
 
     private ReviewResponse toResponse(Review review, String displayName, String avatarUrl) {

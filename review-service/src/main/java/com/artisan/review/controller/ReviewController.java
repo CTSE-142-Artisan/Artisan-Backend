@@ -1,6 +1,7 @@
 package com.artisan.review.controller;
 
 import com.artisan.review.dto.CreateReviewRequest;
+import com.artisan.review.dto.ListingReviewSummaryResponse;
 import com.artisan.review.dto.ReviewResponse;
 import com.artisan.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,5 +45,11 @@ public class ReviewController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(reviewService.getByListings(listingIds, page, size));
+    }
+
+    @GetMapping("/summary/listing/{listingId}")
+    @Operation(summary = "Get rating summary for a listing")
+    public ResponseEntity<ListingReviewSummaryResponse> getListingSummary(@PathVariable String listingId) {
+        return ResponseEntity.ok(reviewService.getListingSummary(listingId));
     }
 }

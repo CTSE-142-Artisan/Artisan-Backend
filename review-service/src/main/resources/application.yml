@@ -12,6 +12,8 @@ server:
 integration:
   user-service:
     url: ${USER_SERVICE_URL:http://localhost:8080}
+  order-service:
+    url: ${ORDER_SERVICE_URL:http://localhost:8082}
 
 springdoc:
   api-docs:
