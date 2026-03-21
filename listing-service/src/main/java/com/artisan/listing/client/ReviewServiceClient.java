@@ -9,7 +9,7 @@ public class ReviewServiceClient {
 
     private final WebClient webClient;
 
-    public ReviewServiceClient(@Value("${integration.review-service.url:http://localhost:8083}") String baseUrl) {
+    public ReviewServiceClient(@Value("${integration.api-gateway.url:http://localhost:8084}") String baseUrl) {
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();

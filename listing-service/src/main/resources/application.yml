@@ -10,10 +10,8 @@ server:
   port: ${PORT:8081}
 
 integration:
-  user-service:
-    url: ${USER_SERVICE_URL:http://localhost:8080}
-  review-service:
-    url: ${REVIEW_SERVICE_URL:http://localhost:8083}
+  api-gateway:
+    url: ${API_GATEWAY_URL:http://localhost:8084}
 
 springdoc:
   api-docs:

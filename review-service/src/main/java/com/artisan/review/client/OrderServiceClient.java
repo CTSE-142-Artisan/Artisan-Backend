@@ -9,7 +9,7 @@ public class OrderServiceClient {
 
     private final WebClient webClient;
 
-    public OrderServiceClient(@Value("${integration.order-service.url:http://localhost:8082}") String baseUrl) {
+    public OrderServiceClient(@Value("${integration.api-gateway.url:http://localhost:8084}") String baseUrl) {
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();

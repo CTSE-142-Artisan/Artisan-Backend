@@ -9,7 +9,7 @@ public class UserServiceClient {
 
     private final WebClient webClient;
 
-    public UserServiceClient(@Value("${integration.user-service.url:http://localhost:8080}") String baseUrl) {
+    public UserServiceClient(@Value("${integration.api-gateway.url:http://localhost:8084}") String baseUrl) {
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();

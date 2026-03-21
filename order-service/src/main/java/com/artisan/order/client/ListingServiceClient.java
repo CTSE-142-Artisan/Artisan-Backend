@@ -6,14 +6,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.math.BigDecimal;
-
 @Component
 public class ListingServiceClient {
 
     private final WebClient webClient;
 
-    public ListingServiceClient(@Value("${integration.listing-service.url:http://localhost:8081}") String baseUrl) {
+    public ListingServiceClient(@Value("${integration.api-gateway.url:http://localhost:8084}") String baseUrl) {
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();

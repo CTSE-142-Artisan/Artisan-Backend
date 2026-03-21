@@ -1,17 +1,15 @@
 package com.artisan.order.client;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @Component
 public class UserServiceClient {
 
     private final WebClient webClient;
 
-    public UserServiceClient(@Value("${integration.user-service.url:http://localhost:8080}") String baseUrl) {
+    public UserServiceClient(@Value("${integration.api-gateway.url:http://localhost:8084}") String baseUrl) {
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();

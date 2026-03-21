@@ -111,12 +111,15 @@ Repeat the same pattern for:
 
 #### Order Service
 
-- `USER_SERVICE_URL`
-- `LISTING_SERVICE_URL`
+- `API_GATEWAY_URL`
 
 #### Review Service
 
-- `USER_SERVICE_URL`
+- `API_GATEWAY_URL`
+
+#### Listing Service
+
+- `API_GATEWAY_URL`
 
 ## API Surface
 
