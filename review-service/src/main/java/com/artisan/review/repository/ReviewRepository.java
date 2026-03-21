@@ -14,5 +14,5 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
 
     Page<Review> findByListingIdInAndVisibleTrue(List<String> listingIds, Pageable pageable);
 
-    Optional<Review> findByOrderIdAndUserId(String orderId, String userId);
+    Optional<Review> findByOrderIdAndUserIdAndListingId(String orderId, String userId, String listingId);
 }
