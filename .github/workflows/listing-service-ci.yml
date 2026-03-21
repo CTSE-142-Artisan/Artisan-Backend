@@ -1,0 +1,29 @@
+name: Listing Service CI/CD
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "listing-service/**"
+      - ".github/workflows/listing-service-ci.yml"
+      - ".github/workflows/azure-containerapp-deploy.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "listing-service/**"
+      - ".github/workflows/listing-service-ci.yml"
+      - ".github/workflows/azure-containerapp-deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/azure-containerapp-deploy.yml
+    with:
+      service_name: listing-service
+      service_path: listing-service
+      container_app_name: listing-service
+      build_command: mvn clean package -DskipTests -B
+      set_mongodb_secret: true
+      enable_sonar: true
+      sonar_project_key: ${{ github.repository_owner }}_artisan-listing-service
+    secrets: inherit
