@@ -1,0 +1,88 @@
+name: Snyk Security
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/snyk.yml"
+      - "api-gateway/**"
+      - "listing-service/**"
+      - "order-service/**"
+      - "review-service/**"
+      - "user-service/**"
+  push:
+    branches:
+      - dev
+      - main
+      - master
+    paths:
+      - ".github/workflows/snyk.yml"
+      - "api-gateway/**"
+      - "listing-service/**"
+      - "order-service/**"
+      - "review-service/**"
+      - "user-service/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  opensource-dependencies:
+    name: OSS scan (${{ matrix.service.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: api-gateway
+            path: api-gateway
+          - name: listing-service
+            path: listing-service
+          - name: order-service
+            path: order-service
+          - name: review-service
+            path: review-service
+          - name: user-service
+            path: user-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Set up Snyk
+        uses: snyk/actions/setup@master
+
+      - name: Test dependencies with Snyk
+        working-directory: ${{ matrix.service.path }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --file=pom.xml --package-manager=maven --severity-threshold=high
+
+      - name: Export SARIF
+        if: always()
+        working-directory: ${{ matrix.service.path }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --file=pom.xml --package-manager=maven --severity-threshold=high --sarif-file-output=snyk.sarif
+
+      - name: Upload SARIF to GitHub
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ matrix.service.path }}/snyk.sarif
+          category: snyk-${{ matrix.service.name }}
+
+      - name: Monitor project in Snyk
+        if: github.event_name != 'pull_request'
+        working-directory: ${{ matrix.service.path }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk monitor --file=pom.xml --package-manager=maven --project-name=${{ github.event.repository.name }}/${{ matrix.service.name }}
