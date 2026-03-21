@@ -13,7 +13,7 @@ servers:
 paths:
   /api/reviews:
     post:
-      summary: Create a review
+      summary: Create a review for a purchased listing
       tags: [Reviews]
       requestBody:
         required: true
@@ -29,7 +29,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReviewResponse'
         '400':
-          description: Validation err
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Buyer has not purchased the listing
           content:
             application/json:
               schema:
@@ -97,15 +103,35 @@ paths:
                 items:
                   $ref: '#/components/schemas/ReviewResponse'
 
+  /api/reviews/summary/listing/{listingId}:
+    get:
+      summary: Get rating summary for a listing
+      tags: [Reviews]
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listing review summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingReviewSummaryResponse'
+
 components:
   schemas:
     CreateReviewRequest:
       type: object
-      required: [listingId, buyerId, rating, comment]
+      required: [listingId, orderId, userId, rating]
       properties:
         listingId:
           type: string
-        buyerId:
+        orderId:
+          type: string
+        userId:
           type: string
         rating:
           type: integer
@@ -113,6 +139,7 @@ components:
           maximum: 5
         comment:
           type: string
+          maxLength: 1000
 
     ReviewResponse:
       type: object
@@ -121,9 +148,13 @@ components:
           type: string
         listingId:
           type: string
-        buyerId:
+        orderId:
           type: string
-        buyerName:
+        userId:
+          type: string
+        userDisplayName:
+          type: string
+        userAvatarUrl:
           type: string
         rating:
           type: integer
@@ -133,14 +164,30 @@ components:
           type: string
           format: date-time
 
+    ListingReviewSummaryResponse:
+      type: object
+      properties:
+        listingId:
+          type: string
+        averageRating:
+          type: number
+          format: double
+          nullable: true
+        reviewCount:
+          type: integer
+          format: int64
+
     ErrorResponse:
       type: object
       properties:
-        statusCode:
+        timestamp:
+          type: string
+          format: date-time
+        status:
           type: integer
+        error:
+          type: string
         message:
           type: string
-        details:
-          type: array
-          items:
-            type: string
+        path:
+          type: string
