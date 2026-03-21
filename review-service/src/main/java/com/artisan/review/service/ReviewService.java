@@ -25,9 +25,13 @@ public class ReviewService {
     private final UserServiceClient userServiceClient;
 
     public ReviewResponse create(CreateReviewRequest request) {
-        var existing = repository.findByOrderIdAndUserId(request.getOrderId(), request.getUserId());
+        var existing = repository.findByOrderIdAndUserIdAndListingId(
+                request.getOrderId(),
+                request.getUserId(),
+                request.getListingId()
+        );
         if (existing.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Review already exists for this order");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Review already exists for this listing in the selected order");
         }
 
         Review review = Review.builder()
