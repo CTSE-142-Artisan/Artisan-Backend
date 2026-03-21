@@ -1,5 +1,6 @@
 package com.artisan.listing.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ListingResponse {
     private String id;
     private String sellerId;
@@ -26,4 +28,6 @@ public class ListingResponse {
     private int stockQuantity;
     private boolean active;
     private Instant createdAt;
+    private Double averageRating;
+    private Long reviewCount;
 }

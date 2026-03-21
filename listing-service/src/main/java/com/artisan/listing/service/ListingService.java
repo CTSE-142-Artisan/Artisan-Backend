@@ -1,5 +1,7 @@
 package com.artisan.listing.service;
 
+import com.artisan.listing.client.ReviewServiceClient;
+import com.artisan.listing.client.UserServiceClient;
 import com.artisan.listing.dto.CreateListingRequest;
 import com.artisan.listing.dto.ListingResponse;
 import com.artisan.listing.dto.StockCheckResponse;
@@ -23,8 +25,14 @@ import java.util.stream.Collectors;
 public class ListingService {
 
     private final ListingRepository repository;
+    private final UserServiceClient userServiceClient;
+    private final ReviewServiceClient reviewServiceClient;
 
     public ListingResponse create(CreateListingRequest request) {
+        if (!userServiceClient.validateSeller(request.getSellerId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid seller: " + request.getSellerId());
+        }
+
         Listing listing = Listing.builder()
                 .id(UUID.randomUUID().toString())
                 .sellerId(request.getSellerId())
@@ -47,7 +55,7 @@ public class ListingService {
     public ListingResponse getById(String id) {
         Listing listing = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found: " + id));
-        return toResponse(listing);
+        return toResponse(listing, true);
     }
 
     public List<ListingResponse> list(int page, int size) {
@@ -123,5 +131,17 @@ public class ListingService {
                 .active(listing.isActive())
                 .createdAt(listing.getCreatedAt())
                 .build();
+    }
+
+    private ListingResponse toResponse(Listing listing, boolean includeReviewSummary) {
+        ListingResponse response = toResponse(listing);
+        if (!includeReviewSummary) {
+            return response;
+        }
+
+        var reviewSummary = reviewServiceClient.getListingSummary(listing.getId());
+        response.setAverageRating(reviewSummary.averageRating());
+        response.setReviewCount(reviewSummary.reviewCount());
+        return response;
     }
 }
