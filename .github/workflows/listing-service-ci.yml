@@ -1,0 +1,24 @@
+name: Listing Service CI
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "listing-service/**"
+      - ".github/workflows/listing-service-ci.yml"
+      - ".github/workflows/azure-containerapp-deploy.yml"
+
+jobs:
+  build-and-push:
+    uses: ./.github/workflows/azure-containerapp-deploy.yml
+    with:
+      service_name: listing-service
+      service_path: listing-service
+      build_command: mvn clean package -DskipTests -B
+      enable_sonar: true
+      sonar_project_key: ${{ github.repository_owner }}_artisan-listing-service
+    secrets: inherit
+    # secrets:
+    #   ACR_LOGIN_SERVER: ${{ secrets.REVIEW_AZ2_ACR_LOGIN_SERVER }}
+    #   ACR_USERNAME: ${{ secrets.REVIEW_AZ2_ACR_USERNAME }}
+    #   ACR_PASSWORD: ${{ secrets.REVIEW_AZ2_ACR_PASSWORD }}

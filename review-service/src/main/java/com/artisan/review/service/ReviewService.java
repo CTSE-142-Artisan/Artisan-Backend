@@ -1,0 +1,119 @@
+package com.artisan.review.service;
+
+import com.artisan.review.client.OrderServiceClient;
+import com.artisan.review.client.UserServiceClient;
+import com.artisan.review.dto.CreateReviewRequest;
+import com.artisan.review.dto.ListingReviewSummaryResponse;
+import com.artisan.review.dto.ReviewResponse;
+import com.artisan.review.model.Review;
+import com.artisan.review.repository.ReviewRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ReviewService {
+
+    private final ReviewRepository repository;
+    private final UserServiceClient userServiceClient;
+    private final OrderServiceClient orderServiceClient;
+
+    public ReviewResponse create(CreateReviewRequest request) {
+        var existing = repository.findByOrderIdAndUserIdAndListingId(
+                request.getOrderId(),
+                request.getUserId(),
+                request.getListingId()
+        );
+        if (existing.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Review already exists for this listing in the selected order");
+        }
+
+        if (!orderServiceClient.hasPurchased(request.getUserId(), request.getListingId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Reviews are only allowed for purchased listings");
+        }
+
+        Review review = Review.builder()
+                .id(UUID.randomUUID().toString())
+                .listingId(request.getListingId())
+                .orderId(request.getOrderId())
+                .userId(request.getUserId())
+                .rating(request.getRating())
+                .comment(request.getComment() != null ? request.getComment() : "")
+                .createdAt(Instant.now())
+                .visible(true)
+                .build();
+        review = repository.save(review);
+
+        var userProfile = userServiceClient.getUserProfile(review.getUserId());
+        return toResponse(review, userProfile.displayName(), userProfile.avatarUrl());
+    }
+
+    public List<ReviewResponse> getByListing(String listingId, int page, int size) {
+        return repository.findByListingIdAndVisibleTrue(listingId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .stream()
+                .map(r -> {
+                    var profile = userServiceClient.getUserProfile(r.getUserId());
+                    return toResponse(r, profile.displayName(), profile.avatarUrl());
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<ReviewResponse> getByListings(List<String> listingIds, int page, int size) {
+        if (listingIds == null || listingIds.isEmpty()) {
+            return List.of();
+        }
+
+        return repository.findByListingIdInAndVisibleTrue(listingIds, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .stream()
+                .map(r -> {
+                    var profile = userServiceClient.getUserProfile(r.getUserId());
+                    return toResponse(r, profile.displayName(), profile.avatarUrl());
+                })
+                .collect(Collectors.toList());
+    }
+
+    public ListingReviewSummaryResponse getListingSummary(String listingId) {
+        List<Review> reviews = repository.findByListingIdAndVisibleTrue(listingId);
+        if (reviews.isEmpty()) {
+            return ListingReviewSummaryResponse.builder()
+                    .listingId(listingId)
+                    .averageRating(null)
+                    .reviewCount(0)
+                    .build();
+        }
+
+        double averageRating = reviews.stream()
+                .mapToInt(Review::getRating)
+                .average()
+                .orElse(0.0);
+
+        return ListingReviewSummaryResponse.builder()
+                .listingId(listingId)
+                .averageRating(averageRating)
+                .reviewCount(reviews.size())
+                .build();
+    }
+
+    private ReviewResponse toResponse(Review review, String displayName, String avatarUrl) {
+        return ReviewResponse.builder()
+                .id(review.getId())
+                .listingId(review.getListingId())
+                .orderId(review.getOrderId())
+                .userId(review.getUserId())
+                .userDisplayName(displayName)
+                .userAvatarUrl(avatarUrl)
+                .rating(review.getRating())
+                .comment(review.getComment())
+                .createdAt(review.getCreatedAt())
+                .build();
+    }
+}

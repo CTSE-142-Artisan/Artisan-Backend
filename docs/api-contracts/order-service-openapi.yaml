@@ -1,0 +1,223 @@
+openapi: 3.0.3
+info:
+  title: Order Service API
+  description: Cart and checkout for Global Artisan Marketplace
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8082
+    description: Local
+  - url: https://order-service.example.com
+    description: Production
+
+paths:
+  /api/orders/cart:
+    post:
+      summary: Add item to cart
+      tags: [Orders]
+      parameters:
+        - name: X-Buyer-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToCartRequest'
+      responses:
+        '200':
+          description: Added successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/orders/checkout:
+    post:
+      summary: Checkout (mock payment)
+      tags: [Orders]
+      parameters:
+        - name: X-Buyer-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Checkout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Cart is empty or stock unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/orders:
+    get:
+      summary: List orders for buyer
+      tags: [Orders]
+      parameters:
+        - name: X-Buyer-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+
+  /api/orders/verify-purchase:
+    get:
+      summary: Verify whether a buyer has purchased a listing
+      tags: [Orders]
+      parameters:
+        - name: buyerId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: listingId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Purchase verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseVerificationResponse'
+
+  /api/orders/seller/{sellerId}:
+    get:
+      summary: List orders containing items sold by a seller
+      tags: [Orders]
+      parameters:
+        - name: sellerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+
+  /api/orders/{id}:
+    get:
+      summary: Get order by ID
+      tags: [Orders]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    AddToCartRequest:
+      type: object
+      required: [listingId, quantity]
+      properties:
+        listingId:
+          type: string
+        quantity:
+          type: integer
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        buyerId:
+          type: string
+        status:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemResponse'
+        totalAmount:
+          type: number
+          format: double
+        currency:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    OrderItemResponse:
+      type: object
+      properties:
+        listingId:
+          type: string
+        title:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+          format: double
+        lineTotal:
+          type: number
+          format: double
+
+    PurchaseVerificationResponse:
+      type: object
+      properties:
+        buyerId:
+          type: string
+        listingId:
+          type: string
+        purchased:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string

@@ -1,0 +1,326 @@
+openapi: 3.0.3
+info:
+  title: Listing Service API
+  description: Product listings and search for Global Artisan Marketplace
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081
+    description: Local
+  - url: https://listing-service.example.com
+    description: Production
+
+paths:
+  /api/listings:
+    post:
+      summary: Create a new listing for a valid seller
+      tags: [Listings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateListingRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingResponse'
+        '400':
+          description: Validation error or invalid seller
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List all active listings
+      tags: [Listings]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListingResponse'
+
+  /api/listings/{id}:
+    get:
+      summary: Get listing by ID
+      tags: [Listings]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/listings/search:
+    get:
+      summary: Search listings by text
+      tags: [Listings]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListingResponse'
+
+  /api/listings/category/{category}:
+    get:
+      summary: List by category
+      tags: [Listings]
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListingResponse'
+
+  /api/listings/seller/{sellerId}:
+    get:
+      summary: List listings owned by a seller
+      tags: [Listings]
+      parameters:
+        - name: sellerId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListingResponse'
+
+  /api/listings/stock/check:
+    post:
+      summary: Check stock availability
+      tags: [Listings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockCheckRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockCheckResponse'
+
+  /api/listings/stock/reduce:
+    post:
+      summary: Reduce stock
+      tags: [Listings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockReduceRequest'
+      responses:
+        '200':
+          description: Reduced successfully
+        '400':
+          description: Insufficient stock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CreateListingRequest:
+      type: object
+      required: [sellerId, title, category, price, stockQuantity]
+      properties:
+        sellerId:
+          type: string
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        category:
+          type: string
+        country:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        stockQuantity:
+          type: integer
+
+    ListingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        sellerId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        country:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        stockQuantity:
+          type: integer
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        averageRating:
+          type: number
+          format: double
+          nullable: true
+        reviewCount:
+          type: integer
+          format: int64
+
+    StockCheckRequest:
+      type: object
+      required: [listingId, quantity]
+      properties:
+        listingId:
+          type: string
+        quantity:
+          type: integer
+
+    StockCheckResponse:
+      type: object
+      properties:
+        available:
+          type: boolean
+        requestedQuantity:
+          type: integer
+        availableStock:
+          type: integer
+        unitPrice:
+          type: number
+          format: double
+
+    StockReduceRequest:
+      type: object
+      required: [listingId, quantity]
+      properties:
+        listingId:
+          type: string
+        quantity:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
