@@ -1,4 +1,4 @@
-package com.artisan.order.client;
+package com.artisan.listing.client;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,14 +15,17 @@ public class UserServiceClient {
                 .build();
     }
 
-    public boolean validateUser(String userId) {
-        return Boolean.TRUE.equals(webClient.get()
-                .uri("/api/users/{id}/validate", userId)
-                .retrieve()
-                .bodyToMono(ValidationResponse.class)
-                .map(r -> r != null && r.valid())
-                .onErrorReturn(false)
-                .block());
+    public boolean validateSeller(String sellerId) {
+        try {
+            ValidationResponse response = webClient.get()
+                    .uri("/api/users/{id}/validate-seller", sellerId)
+                    .retrieve()
+                    .bodyToMono(ValidationResponse.class)
+                    .block();
+            return response != null && response.valid();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private record ValidationResponse(String userId, boolean valid) {}

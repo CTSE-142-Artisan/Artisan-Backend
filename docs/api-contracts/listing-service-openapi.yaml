@@ -13,7 +13,7 @@ servers:
 paths:
   /api/listings:
     post:
-      summary: Create a new listing
+      summary: Create a new listing for a valid seller
       tags: [Listings]
       requestBody:
         required: true
@@ -29,7 +29,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ListingResponse'
         '400':
-          description: Validation err
+          description: Validation error or invalid seller
           content:
             application/json:
               schema:
@@ -214,54 +214,70 @@ components:
   schemas:
     CreateListingRequest:
       type: object
-      required: [title, description, price, stockQuantity, category, sellerId]
+      required: [sellerId, title, category, price, stockQuantity]
       properties:
-        title:
-          type: string
-        description:
-          type: string
-        price:
-          type: number
-          format: double
-        stockQuantity:
-          type: integer
-        category:
-          type: string
         sellerId:
           type: string
-        images:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        category:
+          type: string
+        country:
+          type: string
+        imageUrls:
           type: array
           items:
             type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        stockQuantity:
+          type: integer
 
     ListingResponse:
       type: object
       properties:
         id:
           type: string
+        sellerId:
+          type: string
         title:
           type: string
         description:
           type: string
-        price:
-          type: number
-          format: double
-        stockQuantity:
-          type: integer
         category:
           type: string
-        sellerId:
+        country:
           type: string
-        images:
+        imageUrls:
           type: array
           items:
             type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        stockQuantity:
+          type: integer
+        active:
+          type: boolean
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+        averageRating:
+          type: number
+          format: double
+          nullable: true
+        reviewCount:
+          type: integer
+          format: int64
 
     StockCheckRequest:
       type: object
@@ -277,8 +293,13 @@ components:
       properties:
         available:
           type: boolean
-        remainingStock:
+        requestedQuantity:
           type: integer
+        availableStock:
+          type: integer
+        unitPrice:
+          type: number
+          format: double
 
     StockReduceRequest:
       type: object
@@ -292,11 +313,14 @@ components:
     ErrorResponse:
       type: object
       properties:
-        statusCode:
+        timestamp:
+          type: string
+          format: date-time
+        status:
           type: integer
+        error:
+          type: string
         message:
           type: string
-        details:
-          type: array
-          items:
-            type: string
+        path:
+          type: string

@@ -23,7 +23,7 @@ class ReviewServiceApplicationTests {
     @DynamicPropertySource
     static void mongoProps(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongo::getConnectionString);
-        registry.add("integration.user-service.url", () -> "http://localhost:8080");
+        registry.add("integration.api-gateway.url", () -> "http://localhost:8084");
     }
 
     @Test

@@ -81,6 +81,29 @@ paths:
                 items:
                   $ref: '#/components/schemas/OrderResponse'
 
+  /api/orders/verify-purchase:
+    get:
+      summary: Verify whether a buyer has purchased a listing
+      tags: [Orders]
+      parameters:
+        - name: buyerId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: listingId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Purchase verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseVerificationResponse'
+
   /api/orders/seller/{sellerId}:
     get:
       summary: List orders containing items sold by a seller
@@ -145,21 +168,56 @@ components:
           type: string
         status:
           type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemResponse'
         totalAmount:
           type: number
           format: double
+        currency:
+          type: string
         createdAt:
           type: string
           format: date-time
 
+    OrderItemResponse:
+      type: object
+      properties:
+        listingId:
+          type: string
+        title:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+          format: double
+        lineTotal:
+          type: number
+          format: double
+
+    PurchaseVerificationResponse:
+      type: object
+      properties:
+        buyerId:
+          type: string
+        listingId:
+          type: string
+        purchased:
+          type: boolean
+
     ErrorResponse:
       type: object
       properties:
-        statusCode:
+        timestamp:
+          type: string
+          format: date-time
+        status:
           type: integer
+        error:
+          type: string
         message:
           type: string
-        details:
-          type: array
-          items:
-            type: string
+        path:
+          type: string

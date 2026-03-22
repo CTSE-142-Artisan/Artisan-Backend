@@ -50,6 +50,16 @@ public class UserService {
         return userRepository.existsById(userId);
     }
 
+    /**
+     * Internal validation endpoint for inter-service communication.
+     * Used by Listing Service to verify user is a valid seller.
+     */
+    public boolean validateSeller(String userId) {
+        return userRepository.findById(userId)
+                .map(user -> user.getRole() == User.UserRole.SELLER && user.isActive())
+                .orElse(false);
+    }
+
     private UserProfileResponse toProfileResponse(User user) {
         return UserProfileResponse.builder()
                 .id(user.getId())

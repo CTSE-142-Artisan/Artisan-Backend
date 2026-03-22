@@ -9,6 +9,10 @@ spring:
 server:
   port: ${PORT:8081}
 
+integration:
+  api-gateway:
+    url: ${API_GATEWAY_URL:http://localhost:8084}
+
 springdoc:
   api-docs:
     path: /v3/api-docs

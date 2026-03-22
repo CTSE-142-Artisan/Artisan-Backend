@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,20 @@ public class OrderService {
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public boolean hasPurchasedListing(String buyerId, String listingId) {
+        EnumSet<Order.OrderStatus> purchasedStatuses = EnumSet.of(
+                Order.OrderStatus.PAID,
+                Order.OrderStatus.SHIPPED,
+                Order.OrderStatus.DELIVERED
+        );
+
+        return orderRepository.findByBuyerIdOrderByCreatedAtDesc(buyerId)
+                .stream()
+                .filter(order -> purchasedStatuses.contains(order.getStatus()))
+                .flatMap(order -> order.getItems().stream())
+                .anyMatch(item -> listingId.equals(item.getListingId()));
     }
 
     public List<OrderResponse> getOrdersBySeller(String sellerId) {

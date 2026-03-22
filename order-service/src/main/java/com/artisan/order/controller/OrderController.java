@@ -44,6 +44,15 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersByBuyer(buyerId));
     }
 
+    @GetMapping("/verify-purchase")
+    @Operation(summary = "Verify whether a buyer has purchased a listing")
+    public ResponseEntity<PurchaseVerificationResponse> verifyPurchase(
+            @RequestParam String buyerId,
+            @RequestParam String listingId) {
+        boolean purchased = orderService.hasPurchasedListing(buyerId, listingId);
+        return ResponseEntity.ok(new PurchaseVerificationResponse(buyerId, listingId, purchased));
+    }
+
     @GetMapping("/seller/{sellerId}")
     @Operation(summary = "List orders containing items sold by a seller")
     public ResponseEntity<List<OrderResponse>> getSellerOrders(@PathVariable String sellerId) {
@@ -55,4 +64,6 @@ public class OrderController {
     public ResponseEntity<OrderResponse> getOrder(@PathVariable String id) {
         return ResponseEntity.ok(orderService.getOrder(id));
     }
+
+    public record PurchaseVerificationResponse(String buyerId, String listingId, boolean purchased) {}
 }
