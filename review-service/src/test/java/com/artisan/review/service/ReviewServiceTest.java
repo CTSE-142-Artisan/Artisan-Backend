@@ -1,5 +1,6 @@
 package com.artisan.review.service;
 
+import com.artisan.review.client.OrderServiceClient;
 import com.artisan.review.client.UserServiceClient;
 import com.artisan.review.dto.CreateReviewRequest;
 import com.artisan.review.model.Review;
@@ -27,6 +28,9 @@ class ReviewServiceTest {
 
     @Mock
     private UserServiceClient userServiceClient;
+    
+    @Mock
+    private OrderServiceClient orderServiceClient;
 
     @InjectMocks
     private ReviewService reviewService;
@@ -49,6 +53,23 @@ class ReviewServiceTest {
     }
 
     @Test
+    void createRejectsWhenListingNotPurchased() {
+        CreateReviewRequest request = new CreateReviewRequest();
+        request.setListingId("listing-1");
+        request.setOrderId("order-1");
+        request.setUserId("user-1");
+        request.setRating(5);
+
+        when(repository.findByOrderIdAndUserIdAndListingId("order-1", "user-1", "listing-1"))
+                .thenReturn(Optional.empty());
+        when(orderServiceClient.hasPurchased("user-1", "listing-1")).thenReturn(false);
+
+        assertThatThrownBy(() -> reviewService.create(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Reviews are only allowed for purchased listings");
+    }
+
+    @Test
     void createAllowsDifferentListingWithinSameOrder() {
         CreateReviewRequest request = new CreateReviewRequest();
         request.setListingId("listing-2");
@@ -59,6 +80,7 @@ class ReviewServiceTest {
 
         when(repository.findByOrderIdAndUserIdAndListingId("order-1", "user-1", "listing-2"))
                 .thenReturn(Optional.empty());
+        when(orderServiceClient.hasPurchased("user-1", "listing-2")).thenReturn(true);
         when(repository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(userServiceClient.getUserProfile("user-1"))
                 .thenReturn(new UserServiceClient.UserProfile("user-1", "Buyer One", null));
