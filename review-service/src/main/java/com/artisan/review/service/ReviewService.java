@@ -1,10 +1,12 @@
 package com.artisan.review.service;
 
+import com.artisan.review.client.ListingServiceClient;
 import com.artisan.review.client.OrderServiceClient;
 import com.artisan.review.client.UserServiceClient;
 import com.artisan.review.dto.CreateReviewRequest;
 import com.artisan.review.dto.ListingReviewSummaryResponse;
 import com.artisan.review.dto.ReviewResponse;
+import com.artisan.review.dto.SellerReviewReplyRequest;
 import com.artisan.review.model.Review;
 import com.artisan.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class ReviewService {
     private final ReviewRepository repository;
     private final UserServiceClient userServiceClient;
     private final OrderServiceClient orderServiceClient;
+    private final ListingServiceClient listingServiceClient;
 
     public ReviewResponse create(CreateReviewRequest request) {
         var existing = repository.findByOrderIdAndUserIdAndListingId(
@@ -103,6 +106,29 @@ public class ReviewService {
                 .build();
     }
 
+    public ReviewResponse replyToReview(String reviewId, SellerReviewReplyRequest request) {
+        Review review = repository.findById(reviewId)
+                .filter(Review::isVisible)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found: " + reviewId));
+
+        String listingSellerId = listingServiceClient.getListingSellerId(review.getListingId());
+        if (!request.getSellerId().equals(listingSellerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the listing seller can reply to this review");
+        }
+
+        Instant now = Instant.now();
+        if (review.getSellerReplyCreatedAt() == null) {
+            review.setSellerReplyCreatedAt(now);
+        }
+        review.setSellerReplyUserId(request.getSellerId());
+        review.setSellerReply(request.getReply().trim());
+        review.setSellerReplyUpdatedAt(now);
+
+        Review saved = repository.save(review);
+        var userProfile = userServiceClient.getUserProfile(saved.getUserId());
+        return toResponse(saved, userProfile.displayName(), userProfile.avatarUrl());
+    }
+
     private ReviewResponse toResponse(Review review, String displayName, String avatarUrl) {
         return ReviewResponse.builder()
                 .id(review.getId())
@@ -114,6 +140,10 @@ public class ReviewService {
                 .rating(review.getRating())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())
+                .sellerReplyUserId(review.getSellerReplyUserId())
+                .sellerReply(review.getSellerReply())
+                .sellerReplyCreatedAt(review.getSellerReplyCreatedAt())
+                .sellerReplyUpdatedAt(review.getSellerReplyUpdatedAt())
                 .build();
     }
 }

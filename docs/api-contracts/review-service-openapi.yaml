@@ -103,6 +103,42 @@ paths:
                 items:
                   $ref: '#/components/schemas/ReviewResponse'
 
+  /api/reviews/{reviewId}/seller-reply:
+    patch:
+      summary: Add or update the seller reply for a review
+      tags: [Reviews]
+      parameters:
+        - name: reviewId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SellerReviewReplyRequest'
+      responses:
+        '200':
+          description: Updated review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+        '403':
+          description: Seller does not own the reviewed listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/reviews/summary/listing/{listingId}:
     get:
       summary: Get rating summary for a listing
@@ -141,6 +177,16 @@ components:
           type: string
           maxLength: 1000
 
+    SellerReviewReplyRequest:
+      type: object
+      required: [sellerId, reply]
+      properties:
+        sellerId:
+          type: string
+        reply:
+          type: string
+          maxLength: 1000
+
     ReviewResponse:
       type: object
       properties:
@@ -161,6 +207,16 @@ components:
         comment:
           type: string
         createdAt:
+          type: string
+          format: date-time
+        sellerReplyUserId:
+          type: string
+        sellerReply:
+          type: string
+        sellerReplyCreatedAt:
+          type: string
+          format: date-time
+        sellerReplyUpdatedAt:
           type: string
           format: date-time
 

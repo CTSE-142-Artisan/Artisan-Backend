@@ -3,6 +3,7 @@ package com.artisan.review.controller;
 import com.artisan.review.dto.CreateReviewRequest;
 import com.artisan.review.dto.ListingReviewSummaryResponse;
 import com.artisan.review.dto.ReviewResponse;
+import com.artisan.review.dto.SellerReviewReplyRequest;
 import com.artisan.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,5 +52,13 @@ public class ReviewController {
     @Operation(summary = "Get rating summary for a listing")
     public ResponseEntity<ListingReviewSummaryResponse> getListingSummary(@PathVariable String listingId) {
         return ResponseEntity.ok(reviewService.getListingSummary(listingId));
+    }
+
+    @PatchMapping("/{reviewId}/seller-reply")
+    @Operation(summary = "Add or update the seller reply for a review")
+    public ResponseEntity<ReviewResponse> replyToReview(
+            @PathVariable String reviewId,
+            @Valid @RequestBody SellerReviewReplyRequest request) {
+        return ResponseEntity.ok(reviewService.replyToReview(reviewId, request));
     }
 }

@@ -35,5 +35,12 @@ public class Review {
     private Instant createdAt;
 
     @Indexed
+    private String sellerReplyUserId;
+
+    private String sellerReply;
+    private Instant sellerReplyCreatedAt;
+    private Instant sellerReplyUpdatedAt;
+
+    @Indexed
     private boolean visible;
 }

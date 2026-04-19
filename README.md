@@ -19,7 +19,7 @@ Spring Boot microservices backend for a handmade crafts marketplace. The reposit
 - `user-service` owns authentication and user profiles. It is the only service with Spring Security and JWT dependencies.
 - `listing-service`, `order-service`, and `review-service` are separate Spring Boot services backed by MongoDB.
 - `order-service` integrates with `user-service` and `listing-service`.
-- `review-service` integrates with `user-service`.
+- `review-service` integrates with `user-service`, `order-service`, and `listing-service`.
 - OpenAPI is enabled on every service, and the gateway exposes a unified Swagger UI.
 
 ## Tech Stack
@@ -157,6 +157,7 @@ The order endpoints use the `X-Buyer-Id` request header for buyer-scoped actions
 - `POST /api/reviews`
 - `GET /api/reviews/listing/{listingId}`
 - `GET /api/reviews/listings`
+- `PATCH /api/reviews/{reviewId}/seller-reply`
 
 ## API Documentation
 
