@@ -135,6 +135,8 @@ Repeat the same pattern for:
 
 - `POST /api/listings`
 - `GET /api/listings/{id}`
+- `PUT /api/listings/{id}`
+- `DELETE /api/listings/{id}`
 - `GET /api/listings`
 - `GET /api/listings/search`
 - `GET /api/listings/category/{category}`
