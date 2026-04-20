@@ -21,4 +21,8 @@ public class ReviewResponse {
     private int rating;
     private String comment;
     private Instant createdAt;
+    private String sellerReplyUserId;
+    private String sellerReply;
+    private Instant sellerReplyCreatedAt;
+    private Instant sellerReplyUpdatedAt;
 }

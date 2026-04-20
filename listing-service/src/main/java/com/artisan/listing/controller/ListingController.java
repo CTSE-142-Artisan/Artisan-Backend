@@ -5,6 +5,7 @@ import com.artisan.listing.dto.ListingResponse;
 import com.artisan.listing.dto.StockCheckRequest;
 import com.artisan.listing.dto.StockCheckResponse;
 import com.artisan.listing.dto.StockReduceRequest;
+import com.artisan.listing.dto.UpdateListingRequest;
 import com.artisan.listing.service.ListingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,6 +36,23 @@ public class ListingController {
     @Operation(summary = "Get listing by ID")
     public ResponseEntity<ListingResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(listingService.getById(id));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a seller-owned listing")
+    public ResponseEntity<ListingResponse> update(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateListingRequest request) {
+        return ResponseEntity.ok(listingService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a seller-owned listing")
+    public ResponseEntity<Void> delete(
+            @PathVariable String id,
+            @RequestParam String sellerId) {
+        listingService.delete(id, sellerId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

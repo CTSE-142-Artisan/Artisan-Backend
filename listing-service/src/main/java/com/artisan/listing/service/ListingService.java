@@ -5,6 +5,7 @@ import com.artisan.listing.client.UserServiceClient;
 import com.artisan.listing.dto.CreateListingRequest;
 import com.artisan.listing.dto.ListingResponse;
 import com.artisan.listing.dto.StockCheckResponse;
+import com.artisan.listing.dto.UpdateListingRequest;
 import com.artisan.listing.model.Listing;
 import com.artisan.listing.repository.ListingRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,34 @@ public class ListingService {
         return toResponse(listing, true);
     }
 
+    public ListingResponse update(String id, UpdateListingRequest request) {
+        Listing listing = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found: " + id));
+        assertSellerOwnsListing(listing, request.getSellerId());
+
+        listing.setTitle(request.getTitle());
+        listing.setDescription(request.getDescription() != null ? request.getDescription() : "");
+        listing.setCategory(request.getCategory());
+        listing.setCountry(request.getCountry());
+        listing.setImageUrls(request.getImageUrls());
+        listing.setPrice(request.getPrice());
+        listing.setCurrency(request.getCurrency() != null && !request.getCurrency().isBlank() ? request.getCurrency() : "USD");
+        listing.setStockQuantity(request.getStockQuantity());
+        listing.setUpdatedAt(Instant.now());
+
+        return toResponse(repository.save(listing));
+    }
+
+    public void delete(String id, String sellerId) {
+        Listing listing = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found: " + id));
+        assertSellerOwnsListing(listing, sellerId);
+
+        listing.setActive(false);
+        listing.setUpdatedAt(Instant.now());
+        repository.save(listing);
+    }
+
     public List<ListingResponse> list(int page, int size) {
         return repository.findByActiveTrue(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .stream()
@@ -83,7 +112,7 @@ public class ListingService {
     }
 
     public List<ListingResponse> bySeller(String sellerId, int page, int size) {
-        return repository.findBySellerId(sellerId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
+        return repository.findBySellerIdAndActiveTrue(sellerId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -131,6 +160,12 @@ public class ListingService {
                 .active(listing.isActive())
                 .createdAt(listing.getCreatedAt())
                 .build();
+    }
+
+    private void assertSellerOwnsListing(Listing listing, String sellerId) {
+        if (!listing.getSellerId().equals(sellerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the listing seller can modify this listing");
+        }
     }
 
     private ListingResponse toResponse(Listing listing, boolean includeReviewSummary) {

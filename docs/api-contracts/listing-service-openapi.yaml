@@ -81,6 +81,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a seller-owned listing
+      tags: [Listings]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateListingRequest'
+      responses:
+        '200':
+          description: Updated listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingResponse'
+        '403':
+          description: Seller does not own this listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a seller-owned listing
+      tags: [Listings]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sellerId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Seller does not own this listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/listings/search:
     get:
@@ -213,6 +276,34 @@ paths:
 components:
   schemas:
     CreateListingRequest:
+      type: object
+      required: [sellerId, title, category, price, stockQuantity]
+      properties:
+        sellerId:
+          type: string
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        category:
+          type: string
+        country:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        stockQuantity:
+          type: integer
+
+    UpdateListingRequest:
       type: object
       required: [sellerId, title, category, price, stockQuantity]
       properties:
